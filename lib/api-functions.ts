@@ -232,6 +232,20 @@ function sanitizeTask(task): void {
     return true;
   };
 
+  // 复制ZhengSaisi的修改 Start
+  const validParamAttr = (p): boolean => {
+    if (
+      !Array.isArray(p) ||
+      p.length < 2 ||
+      typeof p[0] !== "string" ||
+      !p[0].length ||
+      (p[1] != null && typeof p[1] !== "string")
+    )
+      return false;
+    return true;
+  };
+  // 复制ZhengSaisi的修改 End
+  
   switch (task.name) {
     case "getParameterValues":
       if (!Array.isArray(task.parameterNames) || !task.parameterNames.length)
