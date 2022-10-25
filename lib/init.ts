@@ -421,6 +421,11 @@ export async function seed(options: Record<string, boolean>): Promise<void> {
   if (resources["presets"])
     for (const p of resources["presets"]) proms.push(db.putPreset(p["_id"], p));
 
+  // Set connection request's default port as coturn's default port
+  resources["config"] = (resources["config"] || []).concat([
+    { _id: "cwmp.udpConnectionRequestPort", value: "3478" }
+  ]);
+
   if (resources["config"])
     for (const c of resources["config"]) proms.push(db.putConfig(c["_id"], c));
 
