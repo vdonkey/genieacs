@@ -25,6 +25,7 @@ import * as logger from "./logger";
 import * as scheduling from "./scheduling";
 import Path from "./common/path";
 import { Fault, SessionContext, ScriptResult } from "./types";
+import { onConnect } from "./db";
 
 // Used for throwing to exit user script and commit
 const COMMIT = Symbol();
@@ -37,6 +38,10 @@ const UNDEFINED = undefined;
 const context = vm.createContext();
 
 let state;
+
+onConnect(async (db) => {
+  Object.defineProperty(context, "db", { value: db });
+});
 
 const runningExtensions = new WeakMap<
   SessionContext,
