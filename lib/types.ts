@@ -175,6 +175,7 @@ export interface Task {
   name: string;
   parameterNames?: string[];
   parameterValues?: [string, string | number | boolean, string?][];
+  parameterAttrs?: [string, string | number | boolean, string?][]; // Copied from ZhengSaisi's commit 1/1
   objectName?: string;
   fileType?: string;
   fileName?: string;
