@@ -232,7 +232,7 @@ function sanitizeTask(task): void {
     return true;
   };
 
-  // 复制ZhengSaisi的修改 Start
+  // Copied from ZhengSaisi's commit -> Start
   const validParamAttr = (p): boolean => {
     if (
       !Array.isArray(p) ||
@@ -244,7 +244,7 @@ function sanitizeTask(task): void {
       return false;
     return true;
   };
-  // 复制ZhengSaisi的修改 End
+  // Copied from ZhengSaisi's commit -> End
   
   switch (task.name) {
     case "getParameterValues":
