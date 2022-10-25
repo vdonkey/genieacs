@@ -62,6 +62,9 @@ const username = declare("DeviceID.ID", {value: 1}).value[0]
 // Password will be fixed for a given device because Math.random() is seeded with device ID by default.
 const password = Math.trunc(Math.random() * Number.MAX_SAFE_INTEGER).toString(36);
 
+// Save username and password into deviceConnectAuths table
+db.collection('deviceConnectAuths').updateOne({_id: username}, {$set: {username: username, password: password, updated: new Date().valueOf()}}, {upsert: true});
+
 const informInterval = 300;
 
 // Refresh values daily
