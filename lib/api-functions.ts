@@ -232,6 +232,20 @@ function sanitizeTask(task): void {
     return true;
   };
 
+  // Copied from ZhengSaisi's commit -> Start 1/2
+  const validParamAttr = (p): boolean => {
+    if (
+      !Array.isArray(p) ||
+      p.length < 2 ||
+      typeof p[0] !== "string" ||
+      !p[0].length ||
+      (p[1] != null && typeof p[1] !== "string")
+    )
+      return false;
+    return true;
+  };
+  // Copied from ZhengSaisi's commit -> End 1/2
+  
   switch (task.name) {
     case "getParameterValues":
       if (!Array.isArray(task.parameterNames) || !task.parameterNames.length)
@@ -250,7 +264,26 @@ function sanitizeTask(task): void {
           throw new Error(`Invalid parameter value '${p}'`);
       }
       break;
+    // Copied from ZhengSaisi's commit -> Start 2/2
+    case "getParameterAttributes":
+      if (!Array.isArray(task.parameterNames) || !task.parameterNames.length)
+        throw new Error("Missing 'parameterNames' property");
+      for (const p of task.parameterNames || []) {
+        if (typeof p !== "string" || !p.length)
+          throw new Error(`Invalid parameter name '${p}'`);
+      }
+      break;
 
+    case "setParameterAttributes":
+      if (!Array.isArray(task.parameterAttrs) || !task.parameterAttrs.length)
+        throw new Error("Missing 'parameterAttrs' property");
+      for (const p of task.parameterAttrs || []) {
+        if (!validParamAttr(p))
+          throw new Error(`Invalid parameter Attr '${p}'`);
+      }
+      break;
+    // Copied from ZhengSaisi's commit -> End 2/2
+    
     case "refreshObject":
       if (typeof task.objectName !== "string")
         throw new Error("Missing 'objectName' property");

@@ -700,6 +700,28 @@ async function nextRpc(sessionContext: SessionContext): Promise<void> {
       }
 
       break;
+    // Copied from ZhengSaisi's commit -> Start 1/1
+    case "getParameterAttributes":
+      // Set channel in case params array is empty
+      sessionContext.channels[`task_${task._id}`] = 0;
+      for (const p of task.parameterNames || []) {
+        session.addProvisions(sessionContext, `task_${task._id}`, [
+          ["notification", p],
+        ]);
+      }
+
+      break;
+    case "setParameterAttributes":
+      // Set channel in case params array is empty
+      sessionContext.channels[`task_${task._id}`] = 0;
+      for (const p of task.parameterAttrs || []) {
+        session.addProvisions(sessionContext, `task_${task._id}`, [
+          ["attr", p[0], p[1]],
+        ]);
+      }
+
+      break;
+    // Copied from ZhengSaisi's commit -> End 1/1
     case "refreshObject":
       session.addProvisions(sessionContext, `task_${task._id}`, [
         ["refresh", task.objectName],

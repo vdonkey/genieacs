@@ -62,6 +62,9 @@ const username = declare("DeviceID.ID", {value: 1}).value[0]
 // Password will be fixed for a given device because Math.random() is seeded with device ID by default.
 const password = Math.trunc(Math.random() * Number.MAX_SAFE_INTEGER).toString(36);
 
+// Save username and password into deviceConnectAuths table
+db.collection('deviceConnectAuths').updateOne({_id: username}, {$set: {username: username, password: password, updated: new Date().valueOf()}}, {upsert: true});
+
 const informInterval = 300;
 
 // Refresh values daily
@@ -417,6 +420,11 @@ export async function seed(options: Record<string, boolean>): Promise<void> {
 
   if (resources["presets"])
     for (const p of resources["presets"]) proms.push(db.putPreset(p["_id"], p));
+
+  // Set connection request's default port as coturn's default port
+  resources["config"] = (resources["config"] || []).concat([
+    { _id: "cwmp.udpConnectionRequestPort", value: "3478" }
+  ]);
 
   if (resources["config"])
     for (const c of resources["config"]) proms.push(db.putConfig(c["_id"], c));

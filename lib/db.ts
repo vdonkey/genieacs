@@ -34,6 +34,7 @@ import * as MongoTypes from "./mongodb-types";
 
 export let tasksCollection: Collection<MongoTypes.Task>,
   devicesCollection: Collection,
+  deviceConnectAuthsCollection: Collection,
   presetsCollection: Collection,
   objectsCollection: Collection,
   provisionsCollection: Collection,
@@ -74,6 +75,7 @@ onConnect(async (db) => {
   await tasksCollection.createIndex({ device: 1, timestamp: 1 });
 
   devicesCollection = db.collection("devices");
+  deviceConnectAuthsCollection = db.collection('deviceConnectAuths');
   presetsCollection = db.collection("presets");
   objectsCollection = db.collection("objects");
   filesCollection = db.collection("fs.files");
@@ -619,6 +621,13 @@ export async function saveDevice(
   if (update["$addToSet"] && update["$pull"]) {
     update2 = { $pull: update["$pull"] };
     delete update["$pull"];
+  }
+
+  // Update connection request user name and password if can be found in deviceConnectAuths searching by device id
+  const deviceAuth = await deviceConnectAuthsCollection.findOne({_id: deviceId});
+  if(deviceAuth){
+    update['$set']['InternetGatewayDevice.ManagementServer.ConnectionRequestUsername._value'] = deviceAuth.username;
+    update['$set']['InternetGatewayDevice.ManagementServer.ConnectionRequestPassword._value'] = deviceAuth.password;
   }
 
   const result = await devicesCollection.updateOne({ _id: deviceId }, update, {
