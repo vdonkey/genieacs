@@ -218,6 +218,7 @@ export const component: ClosureComponent = (): Component => {
         "reboot",
         "reset",
         "download",
+        "upload",
         "instances",
       ]);
 

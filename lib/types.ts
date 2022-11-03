@@ -208,7 +208,8 @@ export type AcsRequest =
   | DeleteObject
   | FactoryReset
   | Reboot
-  | Download;
+  | Download
+  | Upload;
 
 export interface GetParameterNames {
   name: "GetParameterNames";
@@ -273,9 +274,19 @@ export interface Download {
   password?: string;
   fileSize?: number;
   targetFileName?: string;
-  delaySecods?: number;
+  delaySeconds?: number;
   successUrl?: string;
   failureUrl?: string;
+}
+
+export interface Upload {
+  name: "Upload";
+  commandKey: string;
+  fileType: string;
+  url?: string;
+  username?: string;
+  password?: string;
+  delaySeconds?: number;
 }
 
 export interface SpvFault {
@@ -306,7 +317,8 @@ export type CpeResponse =
   | DeleteObjectResponse
   | RebootResponse
   | FactoryResetResponse
-  | DownloadResponse;
+  | DownloadResponse
+  | UploadResponse;
 
 export interface GetParameterNamesResponse {
   name: "GetParameterNamesResponse";
@@ -353,6 +365,13 @@ export interface FactoryResetResponse {
 
 export interface DownloadResponse {
   name: "DownloadResponse";
+  status: number;
+  startTime?: number;
+  completeTime?: number;
+}
+
+export interface UploadResponse {
+  name: "UploadResponse";
   status: number;
   startTime?: number;
   completeTime?: number;
