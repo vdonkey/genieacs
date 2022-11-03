@@ -53,6 +53,7 @@ import {
   AddObject,
   DeleteObject,
   Download,
+  Upload,
   Reboot,
   FactoryReset,
   AddObjectResponse,
@@ -1776,6 +1777,7 @@ function generateSetRpcRequest(
   | FactoryReset
   | Reboot
   | Download
+  | Upload
 ) & { next?: string } {
   const syncState = sessionContext.syncState;
   if (!syncState) return null;
@@ -2907,6 +2909,8 @@ export async function rpcResponse(
         sessionContext.operationsTouched = {};
       sessionContext.operationsTouched[rpcReq.commandKey] = 1;
     }
+  } else if (rpcRes.name === "UploadResponse") {
+    console.log('#####99', device, sessionContext, rpcRes);
   } else {
     return invalidResponse("Response name not recognized");
   }

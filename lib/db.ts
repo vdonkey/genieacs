@@ -724,6 +724,10 @@ export async function getDueTasks(
         fileName: t.fileName,
         targetFileName: t.targetFileName,
       }),
+      ...(t.name === "upload" && {
+        fileType: t.fileType,
+        targetFileName: t.targetFileName,
+      }),
       ...(t.name === "addObject" && {
         objectName: t.objectName,
         parameterValues: t.parameterValues,

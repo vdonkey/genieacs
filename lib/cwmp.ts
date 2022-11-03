@@ -738,6 +738,11 @@ async function nextRpc(sessionContext: SessionContext): Promise<void> {
         ["download", task.fileType, task.fileName, task.targetFileName || ""],
       ]);
       break;
+    case "upload":
+      session.addProvisions(sessionContext, `task_${task._id}`, [
+        ["upload", task.fileType, task.targetFileName || ""],
+      ]);
+      break;
     case "addObject":
       alias = (task.parameterValues || [])
         .map((p) => `${p[0]}:${JSON.stringify(p[1])}`)
@@ -868,7 +873,7 @@ async function sendAcsRequest(
 ): Promise<void> {
   if (!acsRequest)
     return writeResponse(sessionContext, soap.response(null), true);
-
+console.log('#####1', sessionContext, acsRequest);
   if (acsRequest.name === "Download") {
     acsRequest.fileSize = 0;
     if (!acsRequest.url) {
@@ -890,7 +895,7 @@ async function sendAcsRequest(
         acsRequest.fileSize = files[acsRequest.fileName].length;
     }
   }
-
+  console.log('#####2', acsRequest);
   const rpc = {
     id: id,
     acsRequest: acsRequest,
