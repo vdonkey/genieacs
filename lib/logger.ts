@@ -18,18 +18,12 @@
  */
 
 import * as fs from "fs";
+import { WriteStream } from "fs";
 import * as os from "os";
 
 import * as config from "./config";
 import { getRequestOrigin } from "./forwarded";
-import {
-  SessionContext,
-  AcsRequest,
-  CpeRequest,
-  CpeFault,
-  InformRequest,
-  Fault,
-} from "./types";
+import { AcsRequest, CpeFault, CpeRequest, Fault, InformRequest, SessionContext, } from "./types";
 
 const REOPEN_EVERY = 60000;
 
@@ -43,25 +37,13 @@ let ACCESS_LOG_SYSTEMD = false;
 
 let LOG_FILE, ACCESS_LOG_FILE;
 
-declare global {
-  /* eslint-disable-next-line @typescript-eslint/no-namespace */
-  namespace NodeJS {
-    export interface WritableStream {
-      fd?: number;
-    }
-  }
-}
 
-declare module "fs" {
-  interface WriteStream {
-    fd?: number;
-  }
-}
-
-let logStream = fs.createWriteStream(null, { fd: process.stderr.fd });
-let logStat = fs.fstatSync(logStream.fd);
-let accessLogStream = fs.createWriteStream(null, { fd: process.stdout.fd });
-let accessLogStat = fs.fstatSync(accessLogStream.fd);
+let logStream: WriteStream = fs.createWriteStream(null, {
+  fd: process.stdout.fd
+})
+let accessLogStream: WriteStream = fs.createWriteStream(null, {
+  fd: process.stdout.fd,
+})
 
 // Reopen if original files have been moved (e.g. logrotate)
 function reopen(): void {
@@ -72,16 +54,15 @@ function reopen(): void {
     fs.stat(LOG_FILE, (err, stat) => {
       if (err && !err.message.startsWith("ENOENT:")) throw err;
 
-      if (!(stat && stat.dev === logStat.dev && stat.ino === logStat.ino)) {
+      if (!(stat)) {
         logStream.end();
-        logStream = fs.createWriteStream(null, {
-          fd: fs.openSync(LOG_FILE, "a"),
-        });
-        logStat = fs.fstatSync(logStream.fd);
+        logStream = fs.createWriteStream(LOG_FILE);
       }
 
-      if (--counter === 0)
+      if (--counter === 0) 
         setTimeout(reopen, REOPEN_EVERY - (Date.now() % REOPEN_EVERY)).unref();
+      
+
     });
   }
 
@@ -90,27 +71,23 @@ function reopen(): void {
     fs.stat(ACCESS_LOG_FILE, (err, stat) => {
       if (err && !err.message.startsWith("ENOENT:")) throw err;
 
-      if (
-        !(
-          stat &&
-          stat.dev === accessLogStat.dev &&
-          stat.ino === accessLogStat.ino
-        )
-      ) {
+      if (!stat) {
         accessLogStream.end();
-        accessLogStream = fs.createWriteStream(null, {
-          fd: fs.openSync(ACCESS_LOG_FILE, "a"),
+        accessLogStream = fs.createWriteStream(ACCESS_LOG_FILE, {
+          flags: 'a'
         });
-        accessLogStat = fs.fstatSync(accessLogStream.fd);
       }
 
-      if (--counter === 0)
+      if (--counter === 0) 
         setTimeout(reopen, REOPEN_EVERY - (Date.now() % REOPEN_EVERY)).unref();
+      
+
     });
   }
 
-  if (--counter === 0)
+  if (--counter === 0) 
     setTimeout(reopen, REOPEN_EVERY - (Date.now() % REOPEN_EVERY)).unref();
+
 }
 
 export function init(service: string, version: string): void {
@@ -122,32 +99,33 @@ export function init(service: string, version: string): void {
   LOG_FILE = config.get(`${service.toUpperCase()}_LOG_FILE`);
   ACCESS_LOG_FILE = config.get(`${service.toUpperCase()}_ACCESS_LOG_FILE`);
 
-  if (LOG_FILE) {
-    logStream = fs.createWriteStream(null, { fd: fs.openSync(LOG_FILE, "a") });
-    logStat = fs.fstatSync(logStream.fd);
-  }
+  if (LOG_FILE) 
+    logStream = fs.createWriteStream(LOG_FILE, {flags: 'a'});
+  
+
 
   if (ACCESS_LOG_FILE) {
-    accessLogStream = fs.createWriteStream(null, {
-      fd: fs.openSync(ACCESS_LOG_FILE, "a"),
+    accessLogStream = fs.createWriteStream(ACCESS_LOG_FILE, {
+      flags: 'a'
     });
-    accessLogStat = fs.fstatSync(accessLogStream.fd);
   }
 
   // Determine if logs are going to journald
-  const JOURNAL_STREAM = process.env["JOURNAL_STREAM"];
+  // const JOURNAL_STREAM = process.env["JOURNAL_STREAM"];
 
-  if (JOURNAL_STREAM) {
-    const [dev, inode] = JOURNAL_STREAM.split(":").map(parseInt);
+  // if (JOURNAL_STREAM) {
+  // const [dev, inode] = JOURNAL_STREAM.split(":").map(parseInt);
 
-    LOG_SYSTEMD = logStat.dev === dev && logStat.ino === inode;
-    ACCESS_LOG_SYSTEMD =
-      accessLogStat.dev === dev && accessLogStat.ino === inode;
-  }
+  LOG_SYSTEMD = true;
+  ACCESS_LOG_SYSTEMD = true;
+  // }
 
   if (LOG_FILE || ACCESS_LOG_FILE)
-    // Can't use setInterval as we need all workers to cehck at the same time
+  // Can't use setInterval as we need all workers to cehck at the same time
+  
     setTimeout(reopen, REOPEN_EVERY - (Date.now() % REOPEN_EVERY)).unref();
+  
+
 }
 
 export function close(): void {
@@ -190,19 +168,26 @@ export function flatten(
     if (rpc.acsRequest) {
       details.acsRequestId = rpc.id;
       details.acsRequestName = rpc.acsRequest.name;
-      if (rpc.acsRequest["commandKey"])
+      if (rpc.acsRequest["commandKey"]) 
         details.acsRequestCommandKey = rpc.acsRequest["commandKey"];
-    } else if (rpc.cpeRequest) {
+      
+
+    }
+    else if (rpc.cpeRequest) {
       details.cpeRequestId = rpc.id;
       if (rpc.cpeRequest.name === "Inform") {
         details.informEvent = (rpc.cpeRequest as InformRequest).event.join(",");
         details.informRetryCount = (rpc.cpeRequest as InformRequest).retryCount;
-      } else {
-        details.cpeRequestName = rpc.cpeRequest.name;
-        if (rpc.cpeRequest["commandKey"])
-          details.cpeRequestCommandKey = rpc.cpeRequest["commandKey"];
       }
-    } else if (rpc.cpeFault) {
+      else {
+        details.cpeRequestName = rpc.cpeRequest.name;
+        if (rpc.cpeRequest["commandKey"]) 
+          details.cpeRequestCommandKey = rpc.cpeRequest["commandKey"];
+        
+
+      }
+    }
+    else if (rpc.cpeFault) {
       details.acsRequestId = rpc.id;
       details.cpeFaultCode = rpc.cpeFault.detail.faultCode;
       details.cpeFaultString = rpc.cpeFault.detail.faultString;
@@ -222,13 +207,17 @@ export function flatten(
     details.remoteAddress = getRequestOrigin(
       details.context["req"]
     ).remoteAddress;
-    if (details.context["state"].user)
+    if (details.context["state"].user) 
       details.user = details.context["state"].user.username;
+    
+
     delete details.context;
   }
 
-  for (const [k, v] of Object.entries(details))
+  for (const [k, v] of Object.entries(details)) 
     if (v == null) delete details[k];
+  
+
 
   return details;
 }
@@ -239,8 +228,12 @@ function formatJson(
 ): string {
   if (systemd) {
     let severity = "";
-    if (details.severity === "info") severity = "<6>";
-    else if (details.severity === "warn") severity = "<4>";
+    if (details.severity === "info") 
+      severity = "<6>";
+    
+    else if (details.severity === "warn") 
+      severity = "<4>";
+    
     else if (details.severity === "error") severity = "<3>";
 
     return `${severity}${JSON.stringify(flatten(details))}${os.EOL}`;
@@ -266,11 +259,16 @@ function formatSimple(
 
   let remote = "";
   if (details.remoteAddress) {
-    if (details.deviceId && skip["deviceId"])
+    if (details.deviceId && skip["deviceId"]) 
       remote = `${details.remoteAddress} ${details.deviceId}: `;
-    else if (details.user)
+    
+    else if (details.user) 
       remote = `${details.user}@${details.remoteAddress}: `;
-    else remote = `${details.remoteAddress}: `;
+    
+    else 
+      remote = `${details.remoteAddress}: `;
+    
+
   }
 
   const keys = Object.keys(details);
@@ -278,15 +276,21 @@ function formatSimple(
   let meta = "";
 
   const kv = [];
-  for (const k of keys)
+  for (const k of keys) 
     if (!skip[k]) kv.push(`${k}=${JSON.stringify(details[k])}`);
+  
+
 
   if (kv.length) meta = `; ${kv.join(" ")}`;
 
   if (systemd) {
     let severity = "";
-    if (details.severity === "info") severity = "<6>";
-    else if (details.severity === "warn") severity = "<4>";
+    if (details.severity === "info") 
+      severity = "<6>";
+    
+    else if (details.severity === "warn") 
+      severity = "<4>";
+    
     else if (details.severity === "error") severity = "<3>";
 
     return `${severity}${remote}${details.message}${meta}${os.EOL}`;
@@ -302,7 +306,8 @@ function log(details: Record<string, unknown>): void {
   if (LOG_FORMAT === "json") {
     details = Object.assign({}, defaultMeta, details);
     logStream.write(formatJson(details, LOG_SYSTEMD));
-  } else {
+  }
+  else {
     logStream.write(formatSimple(details, LOG_SYSTEMD));
   }
 }
@@ -327,7 +332,8 @@ export function accessLog(details: Record<string, unknown>): void {
   if (ACCESS_LOG_FORMAT === "json") {
     Object.assign(details, defaultMeta);
     accessLogStream.write(formatJson(details, ACCESS_LOG_SYSTEMD));
-  } else {
+  }
+  else {
     accessLogStream.write(formatSimple(details, ACCESS_LOG_SYSTEMD));
   }
 }
