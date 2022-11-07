@@ -80,6 +80,11 @@
     "lint-prettier": "prettier --prose-wrap always --write .",
     "lint-tsc": "tsc --noEmit",
     "lint": "npm run lint-eslint && npm run lint-prettier && npm run lint-tsc",
-    "build": "node -r esm -r ts-node/register/transpile-only build/build"
+    "build": "node -r esm -r ts-node/register/transpile-only build/build",
+    "run:cwmp": "tsc && node -r esm bin/genieacs-cwmp.js",
+    "run:ui": "tsc && node -r esm bin/genieacs-ui.js",
+    "run:ext": "tsc && node -r esm bin/genieacs-ext.js",
+    "run:fs": "tsc && node -r esm bin/genieacs-fs.js",
+    "run:nbi": "tsc && node -r esm bin/genieacs-nbi.js"
   }
 }
